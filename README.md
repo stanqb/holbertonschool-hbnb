@@ -1,142 +1,121 @@
-# HBnB Project (AirBnB Clone)
+# HBnB Project 
+
+## Table of Contents
+1. [Project Overview](#project-overview)
+2. [Project Tasks](#project-tasks)
+3. [Technical Documentation](#technical-documentation)
+   - [Task 0: Package Diagram](#task-0-package-diagram)
+   - [Task 1: Class Diagram](#task-1-class-diagram)
+   - [Task 2: Sequence Diagrams](#task-2-sequence-diagrams)
+   - [Task 3: Technical Documentation](#task-3-technical-documentation)
+4. [Business Rules and Requirements](#business-rules-and-requirements)
+5. [Architecture](#architecture)
+6. [Installation and Setup](#installation-and-setup)
+7. [Contributing](#contributing)
 
 ## Project Overview
 
 HBnB is an educational project that aims to create a simplified version of AirBnB. This project implements a complete web application integrating database storage, a back-end API, and front-end interface.
 
-## Architecture
+## Project Tasks
 
-The application follows a layered architecture divided into three main components:
+### Task 0: Package Diagram
+![HBnB Package Diagram](./images/package-diagram.png)
 
-### 1. Front-end Layer
-- **Home Page & Navigation**: Main interface and site navigation
-- **User's Page**: User profile and management
-- **Booking Page**: Reservation interface
-- **Property Presentation**: Detailed view of properties
-- **Notification Page**: User notifications system
+Current implementation includes:
 
-### 2. Back-end Layer
-- **Users Management**: Handles user operations and authentication
-- **Booking Management**: Processes reservations and availability
-- **Review Management**: Manages property reviews and ratings
+#### Front-end Layer
+- Home page and navigation
+- User's page
+- Booking page
+- Property presentation page
+- Notification page
 
-### 3. Business Layer
-The business layer is divided into three main components:
+#### Back-end Layer
+- Users management
+- Booking management
+- Review management
 
-#### Booking Layer
-- Availability checking
-- Price calculation
-- Inscription service
+#### Business Layer
+1. **Booking Layer**
+   - Check availability: data base
+   - Calculate prices: time, property, periods in the year
+   - Inscription service
 
-#### User Layer
-- Authentication service
-- Profile management
-- User data operations
+2. **User Layer**
+   - Authentication service
+   - Manage data: update information, update review
+   - Add/removes favorites
 
-#### Property Layer
-- Property management (add/remove)
-- Property updates (prices, pictures, descriptions)
+3. **Property Layer**
+   - Add property
+   - Remove property
+   - Change property: prices, pictures, description
 
-### 4. Data Layer
-- Users Repository
-- Code Repository
-- Property Repository
+#### Data Layer
+- Users repository
+- Code repository
+- Property repository
 
-### 5. Cross-cutting Concerns
-- **Security**
+#### Cross-cutting Concerns
+- Security
   - Authentication management
   - Restricted access to data
-- **Error Handling**
-- **Communication**
-  - Chat system (booker/renter)
-  - Help system (user/staff)
+- Error Handling
+- Communication
+  - Chat system between booker/renter
+  - Help system for user/staff
 
-## Key Features
+### Task 1: Class Diagram
+[À venir - Diagramme de classe détaillé de la couche Business Logic]
 
-1. **User Management**
-   - User registration and authentication
-   - Profile management
-   - Admin/regular user roles
+### Task 2: Sequence Diagrams
+[À venir - Diagrammes de séquence pour les appels API]
+- User Registration Flow
+- Place Creation Flow
+- Review Submission Flow
+- Place Listing Flow
 
-2. **Property Management**
-   - Property listing creation and management
-   - Amenity association
-   - Location tracking (latitude/longitude)
+### Task 3: Technical Documentation
+[À venir - Documentation technique complète]
 
-3. **Booking System**
-   - Availability checking
-   - Price calculation
-   - Reservation management
+## Business Rules and Requirements
 
-4. **Review System**
-   - Property reviews
-   - Rating system
-   - Comment management
+### Entities
 
-## Technical Specifications
+#### User Entity
+- First name, last name, email, password
+- Administrator status (boolean)
+- CRUD operations
 
-### Data Models
+#### Place Entity
+- Title, description, price, latitude, longitude
+- Owner association
+- Amenities list
+- CRUD operations
 
-1. **User**
-   - First name
-   - Last name
-   - Email
-   - Password
-   - Admin status (boolean)
-   - Created at
-   - Updated at
+#### Review Entity
+- Rating and comment
+- Place and user association
+- CRUD operations
 
-2. **Place**
-   - Title
-   - Description
-   - Price
-   - Latitude
-   - Longitude
-   - Owner (User reference)
-   - Amenities
-   - Created at
-   - Updated at
+#### Amenity Entity
+- Name and description
+- CRUD operations
 
-3. **Review**
-   - Rating
-   - Comment
-   - User reference
-   - Place reference
-   - Created at
-   - Updated at
-
-4. **Amenity**
-   - Name
-   - Description
-   - Created at
-   - Updated at
-
-### Technical Requirements
-
-- All objects have unique identifiers (UUID4)
+### Common Requirements
+- UUID4 for all objects
 - Creation and update timestamps for all entities
-- Secure password handling
-- RESTful API implementation
-- Database persistence
 
-## Development Phases
+## Architecture
 
-1. **Phase 1: Technical Documentation**
-   - Architecture design
-   - Package diagrams
-   - Class diagrams
-   - Sequence diagrams
+The application follows a layered architecture divided into:
+- Presentation Layer (Services & API)
+- Business Logic Layer (Models)
+- Persistence Layer (Database)
 
-2. **Phase 2: Implementation**
-   - Database setup
-   - Back-end development
-   - API implementation
-   - Front-end development
-
-3. **Phase 3: Testing**
-   - Unit testing
-   - Integration testing
-   - User acceptance testing
+## Installation and Setup
+[À venir - Instructions d'installation]
 
 ## Contributing
 
@@ -155,7 +134,3 @@ This project is part of the curriculum at Holberton School. All rights reserved.
 
 - This project is inspired by AirBnB
 - Special thanks to our school and mentors
-
-## Project Status
-
-Currently in Phase 1: Technical Documentation
