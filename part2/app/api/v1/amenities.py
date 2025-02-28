@@ -3,7 +3,7 @@ from app.persistence.repository import Repository
 from flask import request
 from flask_restx import Namespace, Resource
 
-api = Namespace('amenities', description='Operations liées aux amenities')
+api = Namespace('amenities', description='Operations related to amenities')
 
 
 class HBnBFacade:
@@ -11,32 +11,31 @@ class HBnBFacade:
         self.repository = Repository()
 
     def create_amenity(self, amenity_data):
-        """Crée une nouvelle amenity et l'enregistre
-        dans la base de données."""
+        """Creates a new amenity and saves it to the database."""
         if 'name' not in amenity_data or not amenity_data['name']:
-            return None, "Nom de l'amenity requis"
+            return None, "Amenity name required"
         new_amenity = Amenity(name=amenity_data['name'])
         self.repository.save(new_amenity)
         return new_amenity, None
 
     def get_amenity(self, amenity_id):
-        """Récupère une amenity par son ID."""
+        """Retrieves an amenity by its ID."""
         return self.repository.get_by_id(Amenity, amenity_id)
 
     def get_all_amenities(self):
-        """Récupère toutes les amenities disponibles."""
+        """Retrieves all available amenities."""
         return self.repository.get_all(Amenity)
 
     def update_amenity(self, amenity_id, amenity_data):
-        """Met à jour les informations d'une amenity existante."""
+        """Updates the information of an existing amenity."""
         amenity = self.repository.get_by_id(Amenity, amenity_id)
         if not amenity:
-            return None, "Amenity introuvable"
+            return None, "Amenity not found"
         if 'name' in amenity_data and amenity_data['name']:
             amenity.name = amenity_data['name']
             self.repository.save(amenity)
             return amenity, None
-        return None, "Données invalides"
+        return None, "Invalid data"
 
 
 facade = HBnBFacade()
@@ -45,11 +44,11 @@ facade = HBnBFacade()
 @api.route('/')
 class AmenityListResource(Resource):
     def get(self):
-        """Retourne la liste de toutes les amenities."""
+        """Returns the list of all amenities."""
         return [amenity.to_dict() for amenity in facade.get_all_amenities()]
 
     def post(self):
-        """Crée une nouvelle amenity."""
+        """Creates a new amenity."""
         amenity_data = request.json
         amenity, error = facade.create_amenity(amenity_data)
         if error:
@@ -60,14 +59,14 @@ class AmenityListResource(Resource):
 @api.route('/<int:amenity_id>')
 class AmenityResource(Resource):
     def get(self, amenity_id):
-        """Retourne une amenity par son ID."""
+        """Returns an amenity by its ID."""
         amenity = facade.get_amenity(amenity_id)
         if not amenity:
-            return {'error': "Amenity introuvable"}, 404
+            return {'error': "Amenity not found"}, 404
         return amenity.to_dict()
 
     def put(self, amenity_id):
-        """Met à jour une amenity."""
+        """Updates an amenity."""
         amenity_data = request.json
         amenity, error = facade.update_amenity(amenity_id, amenity_data)
         if error:
@@ -75,9 +74,9 @@ class AmenityResource(Resource):
         return amenity.to_dict()
 
     def delete(self, amenity_id):
-        """Supprime une amenity."""
+        """Deletes an amenity."""
         amenity = facade.get_amenity(amenity_id)
         if not amenity:
-            return {'error': "Amenity introuvable"}, 404
+            return {'error': "Amenity not found"}, 404
         facade.repository.delete(amenity)
         return {}, 204
