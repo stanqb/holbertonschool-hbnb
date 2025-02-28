@@ -1,29 +1,34 @@
-from app.models.user import User
-from app.persistence.repository import InMemoryRepository
+import uuid
 
 
 class HBnBFacade:
     def __init__(self):
-        self.user_repo = InMemoryRepository()
+        self.amenities = []
 
-    def create_user(self, user_data):
-        user = User(**user_data)
-        self.user_repo.add(user)
-        return user
+    def create_amenity(self, amenity_data):
+        """ Creates a new amenity and returns the created object """
+        new_amenity = {
+            'id': str(uuid.uuid4()),  # Generates a unique ID
+            'name': amenity_data['name']
+        }
+        self.amenities.append(new_amenity)
+        return new_amenity
 
-    def get_user(self, user_id):
-        return self.user_repo.get(user_id)
+    def get_amenity(self, amenity_id):
+        """ Retrieves an amenity by its ID """
+        for amenity in self.amenities:
+            if amenity['id'] == amenity_id:
+                return amenity
+        return None  # Returns None if the amenity is not found
 
-    def get_user_by_email(self, email):
-        return self.user_repo.get_by_attribute('email', email)
+    def get_all_amenities(self):
+        """ Returns the complete list of amenities """
+        return self.amenities
 
-    def get_all_users(self):
-        return self.user_repo.get_all()
-
-    def update_user(self, user_id, user_data):
-        user = self.user_repo.get(user_id)
-        if user:
-            user.update(user_data)
-            self.user_repo.update(user_id, user_data)
-            return user
-        return None
+    def update_amenity(self, amenity_id, amenity_data):
+        """ Updates an amenity with the provided data """
+        for amenity in self.amenities:
+            if amenity['id'] == amenity_id:
+                amenity['name'] = amenity_data['name']
+                return amenity
+        return None  # Returns None if the amenity is not found
