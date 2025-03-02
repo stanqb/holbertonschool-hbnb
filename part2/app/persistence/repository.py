@@ -31,11 +31,9 @@ class InMemoryRepository(Repository):
         self._storage = {}
 
     def add(self, obj):
-        print(f"Add user {obj.id} : {obj.first_name} {obj.last_name}")
-        self._storage[obj.id] = obj
+         self._storage[obj.id] = obj
 
     def get(self, obj_id):
-        print(f"Fetching user with ID: {obj_id}")
         return self._storage.get(obj_id)
 
     def get_all(self):
@@ -44,7 +42,6 @@ class InMemoryRepository(Repository):
     def update(self, obj_id, data):
         obj = self.get(obj_id)
         if obj:
-            print(f"User finded {obj.id}")
             obj.update(data)
 
     def delete(self, obj_id):
