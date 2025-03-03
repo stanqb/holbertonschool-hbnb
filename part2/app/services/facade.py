@@ -52,42 +52,48 @@ class HBnBFacade:
 
     def create_place(self, place_data):
         """Creates a new place with validation of attributes."""
-        owner = self.user_repo.get(place_data.get("owner"))
-        if not owner:
+        owner_id = place_data.get("owner_id")
+        # Verify owner exists
+        if not self.user_repo.get(owner_id):
             raise ValueError("Invalid owner ID.")
+
         place = Place(
             title=place_data["title"],
             description=place_data.get("description", ""),
             price=place_data["price"],
             latitude=place_data["latitude"],
             longitude=place_data["longitude"],
-            owner=owner
+            owner_id=owner_id
         )
-        self.place_repo.add(place)
-        return place
 
-    def get_place(self, place_id):
+        # Add amenities if provided
+        if "amenities" in place_data and place_data["amenities"]:
+            for amenity_id in place_data["amenities"]:
+                amenity = self.amenity_repo.get(amenity_id)
+                if amenity:
+                    place.add_amenity(amenity)
+
+        self.place_repo.add(place)
+        # Return in the format expected by the API
+        return place.to_dict()
+
+    def get_place_by_id(self, place_id):
         """Retrieves a place by ID, including its owner and amenities."""
         place = self.place_repo.get(place_id)
-        if place:
-            return {
-                "id": place.id,
-                "title": place.title,
-                "description": place.description,
-                "price": place.price,
-                "latitude": place.latitude,
-                "longitude": place.longitude,
-                "owner": place.owner.id,
-                "amenities": [amenity.id for amenity in place.amenities]
-            }
-        return None
+        if not place:
+            return None
+
+        # Load owner relationship
+        place.owner = self.user_repo.get(place.owner_id)
+
+        # Return in the detailed format expected by the API
+        return place.to_detail_dict()
 
     def get_all_places(self):
-        """Retrieves all places."""
-        return [
-            self.get_place(place.id)
-            for place in self.place_repo.get_all()
-        ]
+        """Retrieves all places in a summarized format."""
+        places = self.place_repo.get_all()
+        # Return in the summarized format expected by the API
+        return [place.to_summary_dict() for place in places]
 
     def update_place(self, place_id, place_data):
         """Updates a place's details while ensuring data integrity."""
@@ -105,9 +111,19 @@ class HBnBFacade:
             place.latitude = place_data["latitude"]
         if "longitude" in place_data:
             place.longitude = place_data["longitude"]
-        if "owner" in place_data:
-            owner = self.user_repo.get(place_data["owner"])
-            if owner:
-                place.owner = owner
+        if "owner_id" in place_data:
+            owner_id = place_data["owner_id"]
+            if self.user_repo.get(owner_id):
+                place.owner_id = owner_id
 
-        return place
+        # Update amenities if provided
+        if "amenities" in place_data:
+            # Clear existing amenities
+            place.amenities = []
+            # Add new amenities
+            for amenity_id in place_data["amenities"]:
+                amenity = self.amenity_repo.get(amenity_id)
+                if amenity:
+                    place.add_amenity(amenity)
+
+        return True  # Return True to indicate success as per API requirements

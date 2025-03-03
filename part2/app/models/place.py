@@ -1,18 +1,20 @@
+from uuid import uuid4
 from .base_model import BaseModel
-from .user import User
 
 
 class Place(BaseModel):
-    def __init__(self, title, description, price, latitude, longitude, owner):
+    def __init__(self, title, description, price, latitude,
+                 longitude, owner_id):
         super().__init__()
+        self.id = str(uuid4())  # Explicitly defined to match requirements
         self.title = self.validate_title(title)
         self.description = description or ""
-        self.price = self.validate_price(price)
-        self.latitude = self.validate_latitude(latitude)
-        self.longitude = self.validate_longitude(longitude)
-        self.owner = self.validate_owner(owner)
-        self.reviews = []
-        self.amenities = []
+        self._price = self.validate_price(price)
+        self._latitude = self.validate_latitude(latitude)
+        self._longitude = self.validate_longitude(longitude)
+        self.owner_id = owner_id  # Store the ID instead of User object
+        self.amenities = []  # Keep the amenities list
+        self.owner = None  # To store the owner object when needed
 
     @staticmethod
     def validate_title(title):
@@ -42,16 +44,73 @@ class Place(BaseModel):
             )
         return lon
 
-    @staticmethod
-    def validate_owner(owner):
-        if not isinstance(owner, User):
-            raise ValueError(
-                "The owner attribute must be an instance of User."
-            )
-        return owner
+    @property
+    def price(self):
+        return self._price
 
-    def add_review(self, review):
-        self.reviews.append(review)
+    @price.setter
+    def price(self, value):
+        self._price = self.validate_price(value)
+
+    @property
+    def latitude(self):
+        return self._latitude
+
+    @latitude.setter
+    def latitude(self, value):
+        self._latitude = self.validate_latitude(value)
+
+    @property
+    def longitude(self):
+        return self._longitude
+
+    @longitude.setter
+    def longitude(self, value):
+        self._longitude = self.validate_longitude(value)
 
     def add_amenity(self, amenity):
-        self.amenities.append(amenity)
+        """Add an amenity to this place"""
+        if amenity not in self.amenities:
+            self.amenities.append(amenity)
+
+    def to_dict(self):
+        """Convert the object to a dictionary according to API format"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "price": self.price,
+            "latitude": self.latitude,
+            "longitude": self.longitude,
+            "owner_id": self.owner_id
+        }
+
+    def to_summary_dict(self):
+        """Convert the object to a summary dictionary for place listings"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "latitude": self.latitude,
+            "longitude": self.longitude
+        }
+
+    def to_detail_dict(self):
+        """Convert the object to a detailed dictionary with relationships"""
+        result = self.to_dict()
+
+        # Add owner information if available
+        if self.owner:
+            result["owner"] = {
+                "id": self.owner.id,
+                "first_name": self.owner.first_name,
+                "last_name": self.owner.last_name,
+                "email": self.owner.email
+            }
+
+        # Add amenities information
+        result["amenities"] = [
+            {"id": amenity.id, "name": amenity.name}
+            for amenity in self.amenities
+        ]
+
+        return result
