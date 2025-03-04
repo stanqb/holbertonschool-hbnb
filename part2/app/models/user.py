@@ -9,7 +9,7 @@ class User:
         self.first_name = self.validate_name(first_name)
         self.last_name = self.validate_name(last_name)
         self.email = self.validate_email(email)
-        self.password = password
+        self.password = self.validate_password(password)
 
     def validate_name(self, name):
         """verification of name"""
@@ -23,13 +23,19 @@ class User:
             raise ValueError("Invalid email format.")
         return email
 
+    def validate_password(self, password):
+        """Verification of password length"""
+        if not password or len(password) <= 5:
+            raise ValueError("Password must be longer than 5 characters.")
+        return password
+
     def update(self, updated_data):
         """instance to update user's data"""
         self.first_name = updated_data.get('first_name', self.first_name)
         self.last_name = updated_data.get('last_name', self.last_name)
         self.email = updated_data.get('email', self.email)
         if 'password' in updated_data:
-            self.password = updated_data['password']
+            self.password = self.validate_password(updated_data['password'])
 
     def to_dict(self):
         """Return a dictionary representation of the user"""
