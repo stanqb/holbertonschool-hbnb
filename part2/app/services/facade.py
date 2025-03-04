@@ -1,7 +1,7 @@
 from app.models.user import User
 from app.models.amenity import Amenity
 from app.models.place import Place
-from app.models.review import Review  # Add import for Review model
+from app.models.review import Review
 from app.persistence.repository import InMemoryRepository
 
 
@@ -10,17 +10,20 @@ class HBnBFacade:
         self.user_repo = InMemoryRepository()
         self.amenity_repo = InMemoryRepository()
         self.place_repo = InMemoryRepository()
-        self.review_repo = InMemoryRepository()  # Add repository for reviews
+        self.review_repo = InMemoryRepository()
 
     def create_user(self, user_data):
+        """create a user"""
         user = User(**user_data)
         self.user_repo.add(user)
         return user
 
     def get_user(self, user_id):
+        """get information on a user"""
         return self.user_repo.get(user_id)
 
     def get_user_by_email(self, email):
+        """get user info with email"""
         return self.user_repo.get_by_attribute('email', email)
 
     def update_user(self, user_id, updated_data):
