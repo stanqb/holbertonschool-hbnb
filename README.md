@@ -168,5 +168,6 @@ Build the Presentation and Business Logic layers of the application using Python
    ```
 
 ## Author
-Stan QUEUNIEZ - [Holberton School](https://www.holbertonschool.com)
-Killian LEMOINE - [Holberton School](https://www.holbertonschool.com)
+
+- Stan QUEUNIEZ - [Holberton School](https://www.holbertonschool.com)
+- Killian LEMOINE - [Holberton School](https://www.holbertonschool.com)
