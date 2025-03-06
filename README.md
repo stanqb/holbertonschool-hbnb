@@ -167,7 +167,7 @@ Build the Presentation and Business Logic layers of the application using Python
    http://localhost:5000/api/v1/
    ```
 
-## Author
+## Authors
 
 - Stan QUEUNIEZ - [Holberton School](https://www.holbertonschool.com)
 - Killian LEMOINE - [Holberton School](https://www.holbertonschool.com)
