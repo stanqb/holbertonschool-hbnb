@@ -66,7 +66,7 @@ place_detail_model = api.model('PlaceDetail', {
 })
 
 
-@api.route('')
+@api.route('/')  # MODIFIÉ: Utilisation de '/' au lieu de ''
 class PlaceList(Resource):
     @api.expect(place_input_model)
     @api.response(201, 'Place successfully created')

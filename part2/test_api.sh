@@ -45,8 +45,9 @@ USER_RESPONSE=$(curl -s -X POST "$API_URL/api/v1/users/" \
      }')
 echo "$USER_RESPONSE"
 
-# Extract the user ID for later use
-USER_ID=$(echo $USER_RESPONSE | grep -o '"id":"[^"]*' | cut -d'"' -f4)
+# MÉTHODE TRÈS SIMPLIFIÉE: Utilisons une simple découpe du texte
+# On cherche "id" puis on extrait une chaîne fixe de caractères après
+USER_ID=$(echo "$USER_RESPONSE" | tr -d '\n' | tr -d ' ' | sed 's/.*"id":"//g' | cut -d'"' -f1)
 echo -e "Extracted USER_ID: ${GREEN}$USER_ID${NC}"
 echo ""
 
@@ -97,8 +98,8 @@ PLACE_RESPONSE=$(curl -s -X POST "$API_URL/api/v1/places/" \
      }')
 echo "$PLACE_RESPONSE"
 
-# Extract the place ID for later use
-PLACE_ID=$(echo $PLACE_RESPONSE | grep -o '"id":"[^"]*' | cut -d'"' -f4)
+# Même méthode simplifiée pour PLACE_ID
+PLACE_ID=$(echo "$PLACE_RESPONSE" | tr -d '\n' | tr -d ' ' | sed 's/.*"id":"//g' | cut -d'"' -f1)
 echo -e "Extracted PLACE_ID: ${GREEN}$PLACE_ID${NC}"
 echo ""
 
@@ -153,8 +154,8 @@ REVIEW_RESPONSE=$(curl -s -X POST "$API_URL/api/v1/reviews/" \
      }')
 echo "$REVIEW_RESPONSE"
 
-# Extract the review ID for later use
-REVIEW_ID=$(echo $REVIEW_RESPONSE | grep -o '"id":"[^"]*' | cut -d'"' -f4)
+# Même méthode simplifiée pour REVIEW_ID
+REVIEW_ID=$(echo "$REVIEW_RESPONSE" | tr -d '\n' | tr -d ' ' | sed 's/.*"id":"//g' | cut -d'"' -f1)
 echo -e "Extracted REVIEW_ID: ${GREEN}$REVIEW_ID${NC}"
 echo ""
 
@@ -192,8 +193,8 @@ echo ""
 
 # Test: Get Reviews by Place
 test_case "Get Reviews by Place"
-# Adjust this path according to your API route structure
-curl -s -X GET "$API_URL/api/v1/reviews/places/$PLACE_ID"
+# CORRIGÉ: Route ajustée pour correspondre à la structure dans reviews.py
+curl -s -X GET "$API_URL/api/v1/reviews/places/$PLACE_ID/reviews"
 echo ""
 echo ""
 
@@ -209,8 +210,8 @@ AMENITY_RESPONSE=$(curl -s -X POST "$API_URL/api/v1/amenities/" \
      }')
 echo "$AMENITY_RESPONSE"
 
-# Extract the amenity ID for later use
-AMENITY_ID=$(echo $AMENITY_RESPONSE | grep -o '"id":"[^"]*' | cut -d'"' -f4)
+# Même méthode simplifiée pour AMENITY_ID
+AMENITY_ID=$(echo "$AMENITY_RESPONSE" | tr -d '\n' | tr -d ' ' | sed 's/.*"id":"//g' | cut -d'"' -f1)
 echo -e "Extracted AMENITY_ID: ${GREEN}$AMENITY_ID${NC}"
 echo ""
 
