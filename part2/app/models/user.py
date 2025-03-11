@@ -1,4 +1,5 @@
 import uuid
+import re
 
 
 class User:
@@ -6,9 +7,9 @@ class User:
     def __init__(self, first_name, last_name, email, password=None):
         """user's instance init"""
         self.id = str(uuid.uuid4())
-        self.first_name = self.validate_name(first_name)
-        self.last_name = self.validate_name(last_name)
-        self.email = self.validate_email(email)
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email = email
         self.password = password
 
     def validate_name(self, name):
@@ -22,6 +23,25 @@ class User:
         if not email or '@' not in email or '.' not in email.split('@')[-1]:
             raise ValueError("Invalid email format.")
         return email
+
+    def validate(self):
+        """Validate all user data and return a list of errors"""
+        errors = []
+
+        # Validate first_name
+        if not self.first_name or self.first_name.strip() == "":
+            errors.append("First name cannot be empty")
+
+        # Validate last_name
+        if not self.last_name or self.last_name.strip() == "":
+            errors.append("Last name cannot be empty")
+
+        # Validate email format with a more detailed regex
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not self.email or not re.match(email_pattern, self.email):
+            errors.append("Invalid email format")
+
+        return errors
 
     def update(self, updated_data):
         """instance to update user's data"""
@@ -38,5 +58,4 @@ class User:
             'first_name': self.first_name,
             'last_name': self.last_name,
             'email': self.email
-
         }

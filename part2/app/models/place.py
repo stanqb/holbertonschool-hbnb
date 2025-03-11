@@ -44,6 +44,40 @@ class Place(BaseModel):
             )
         return lon
 
+    def validate(self):
+        """Validate all place data and return a list of errors"""
+        errors = []
+
+        # Validate title
+        if not self.title or self.title.strip() == "":
+            errors.append("Title cannot be empty")
+        elif len(self.title) > 100:
+            errors.append("Title must be a maximum of 100 characters")
+
+        # Validate price
+        if not isinstance(self._price, (int, float)):
+            errors.append("Price must be a number")
+        elif self._price <= 0:
+            errors.append("Price must be a positive number")
+
+        # Validate latitude
+        if not isinstance(self._latitude, (int, float)):
+            errors.append("Latitude must be a number")
+        elif not (-90.0 <= self._latitude <= 90.0):
+            errors.append("Latitude must be between -90 and 90")
+
+        # Validate longitude
+        if not isinstance(self._longitude, (int, float)):
+            errors.append("Longitude must be between -180 and 180")
+        elif not (-180.0 <= self._longitude <= 180.0):
+            errors.append("Longitude must be between -180 and 180")
+
+        # Validate owner_id
+        if not self.owner_id:
+            errors.append("Owner ID cannot be empty")
+
+        return errors
+
     @property
     def price(self):
         return self._price
