@@ -19,6 +19,14 @@ class AmenityList(Resource):
     def post(self):
         """Register a new amenity"""
         amenity_data = api.payload
+
+        # Add validation for empty name
+        if not amenity_data.get('name') or amenity_data['name'].strip() == "":
+            return {
+                'error': 'Invalid input data',
+                'details': ['Amenity name cannot be empty']
+            }, 400
+
         new_amenity = facade.create_amenity(amenity_data)
         return {'id': new_amenity.id, 'name': new_amenity.name}, 201
 
@@ -40,7 +48,7 @@ class AmenityResource(Resource):
         """Get amenity details by ID"""
         amenity = facade.get_amenity(amenity_id)
         if not amenity:
-            return {'error': 'Commodité non trouvée'}, 404
+            return {'error': 'Amenity not found'}, 404
         return {'id': amenity.id, 'name': amenity.name}, 200
 
     @api.expect(amenity_model)
@@ -50,9 +58,17 @@ class AmenityResource(Resource):
     def put(self, amenity_id):
         """Update an amenity's information"""
         amenity_data = api.payload
+
+        # Add validation for empty name
+        if not amenity_data.get('name') or amenity_data['name'].strip() == "":
+            return {
+                'error': 'Invalid input data',
+                'details': ['Amenity name cannot be empty']
+            }, 400
+
         updated_amenity = facade.update_amenity(amenity_id, amenity_data)
 
         if not updated_amenity:
-            return {'error': 'Commodité non trouvée'}, 404
+            return {'error': 'Amenity not found'}, 404
 
-        return {'message': 'Commodité mise à jour avec succès'}, 200
+        return {'message': 'Amenity updated successfully'}, 200

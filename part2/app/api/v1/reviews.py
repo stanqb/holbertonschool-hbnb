@@ -25,6 +25,45 @@ class ReviewList(Resource):
         # Get request data
         review_data = api.payload
 
+        # Manual validation of the data
+        errors = []
+
+        # Validate text
+        if not review_data.get('text') or review_data['text'].strip() == "":
+            errors.append("Review text cannot be empty")
+
+        # Validate rating
+        try:
+            rating = int(review_data.get('rating', 0))
+            if not (1 <= rating <= 5):
+                errors.append("Rating must be an integer between 1 and 5")
+        except (ValueError, TypeError):
+            errors.append("Rating must be an integer between 1 and 5")
+
+        # Validate user_id and place_id
+        if not review_data.get('user_id'):
+            errors.append("User ID cannot be empty")
+
+        if not review_data.get('place_id'):
+            errors.append("Place ID cannot be empty")
+
+        # Verify user and place exist if possible
+        try:
+            if not facade.get_user(review_data.get('user_id')):
+                errors.append("Invalid user_id - user not found")
+        except Exception:
+            errors.append("Invalid user_id - user not found")
+
+        try:
+            if not facade.get_place_by_id(review_data.get('place_id')):
+                errors.append("Invalid place_id - place not found")
+        except Exception:
+            errors.append("Invalid place_id - place not found")
+
+        # Return errors if any
+        if errors:
+            return {'error': 'Invalid input data', 'details': errors}, 400
+
         try:
             # Create review using the facade
             review = facade.create_review(review_data)
@@ -74,6 +113,27 @@ class ReviewResource(Resource):
             del update_data['user_id']
         if 'place_id' in update_data:
             del update_data['place_id']
+
+        # Manual validation of the update data
+        errors = []
+
+        # Validate text if provided
+        if 'text' in update_data:
+            if not update_data['text'] or update_data['text'].strip() == "":
+                errors.append("Review text cannot be empty")
+
+        # Validate rating if provided
+        if 'rating' in update_data:
+            try:
+                rating = int(update_data['rating'])
+                if not (1 <= rating <= 5):
+                    errors.append("Rating must be an integer between 1 and 5")
+            except (ValueError, TypeError):
+                errors.append("Rating must be an integer between 1 and 5")
+
+        # Return errors if any
+        if errors:
+            return {'error': 'Invalid input data', 'details': errors}, 400
 
         try:
             # Update review

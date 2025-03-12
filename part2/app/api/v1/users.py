@@ -1,5 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
+import re
 
 api = Namespace('users', description='User operations')
 
@@ -32,6 +33,29 @@ class UserList(Resource):
         existing_user = facade.get_user_by_email(user_data['email'])
         if existing_user:
             return {'error': 'Email already registered'}, 400
+
+        # Manual validation of the data
+        errors = []
+
+        # Validate first_name
+        if not user_data.get('first_name') or \
+           user_data['first_name'].strip() == "":
+            errors.append("First name cannot be empty")
+
+        # Validate last_name
+        if not user_data.get('last_name') or \
+           user_data['last_name'].strip() == "":
+            errors.append("Last name cannot be empty")
+
+        # Validate email format
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not user_data.get('email') or not re.match(
+                email_pattern, user_data['email']):
+            errors.append("Invalid email format")
+
+        # Return errors if any
+        if errors:
+            return {'error': 'Invalid input data', 'details': errors}, 400
 
         new_user = facade.create_user(user_data)
         return {

@@ -1,136 +1,173 @@
-# HBnB Project 
+# HBnB - Holberton BnB Project
 
-## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Project Tasks](#project-tasks)
-3. [Technical Documentation](#technical-documentation)
-   - [Task 0: Package Diagram](#task-0-package-diagram)
-   - [Task 1: Class Diagram](#task-1-class-diagram)
-   - [Task 2: Sequence Diagrams](#task-2-sequence-diagrams)
-   - [Task 3: Technical Documentation](#task-3-technical-documentation)
-4. [Business Rules and Requirements](#business-rules-and-requirements)
-5. [Architecture](#architecture)
-6. [Installation and Setup](#installation-and-setup)
-7. [Contributing](#contributing)
+## Overview
+HBnB (Holberton BnB) is a comprehensive web application project that follows the architectural patterns of Airbnb. This project focuses on building a robust, scalable platform that allows users to list properties, manage amenities, leave reviews, and perform various administrative functions.
 
-## Project Overview
+## Project Structure
+The project is divided into two main parts:
 
-HBnB is an educational project that aims to create a simplified version of AirBnB. This project implements a complete web application integrating database storage, a back-end API, and front-end interface.
+1. **Part 1: Technical Documentation**
+   - Architecture design and planning
+   - UML diagrams (package, class, sequence)
+   - System blueprint documentation
+   
+2. **Part 2: Implementation**
+   - Business logic layer development
+   - API endpoints creation
+   - Data management
+   - Testing and validation
 
-## Project Tasks
+## Part 1: Technical Documentation
 
-### Task 0: Package Diagram
-![HBnB Package Diagram](./images/package-diagram.png)
+### Objective
+Create comprehensive technical documentation that serves as the foundation for developing the HBnB Evolution application. This documentation includes architectural diagrams, detailed class designs, and sequence flows to guide the implementation.
 
-Current implementation includes:
+### Key Components
 
-#### Front-end Layer
-- Home page and navigation
-- User's page
-- Booking page
-- Property presentation page
-- Notification page
+#### High-Level Package Diagram
+- Three-layer architecture representation:
+  - Presentation Layer: Services and API
+  - Business Logic Layer: Core models
+  - Persistence Layer: Database interactions
+- Facade pattern implementation for layer communication
 
-#### Back-end Layer
-- Users management
-- Booking management
-- Review management
+#### Detailed Class Diagram
+- Business Logic entities (User, Place, Review, Amenity)
+- Entity attributes and methods
+- Inter-entity relationships
+- Data validation and constraints
 
-#### Business Layer
-1. **Booking Layer**
-   - Check availability: data base
-   - Calculate prices: time, property, periods in the year
-   - Inscription service
+#### Sequence Diagrams
+- User Registration flow
+- Place Creation process
+- Review Submission logic
+- Fetching Places data flow
 
-2. **User Layer**
-   - Authentication service
-   - Manage data: update information, update review
-   - Add/removes favorites
-
-3. **Property Layer**
-   - Add property
-   - Remove property
-   - Change property: prices, pictures, description
-
-#### Data Layer
-- Users repository
-- Code repository
-- Property repository
-
-#### Cross-cutting Concerns
-- Security
-  - Authentication management
-  - Restricted access to data
-- Error Handling
-- Communication
-  - Chat system between booker/renter
-  - Help system for user/staff
-
-### Task 1: Class Diagram
-[À venir - Diagramme de classe détaillé de la couche Business Logic]
-
-### Task 2: Sequence Diagrams
-[À venir - Diagrammes de séquence pour les appels API]
-- User Registration Flow
-- Place Creation Flow
-- Review Submission Flow
-- Place Listing Flow
-
-### Task 3: Technical Documentation
-[À venir - Documentation technique complète]
-
-## Business Rules and Requirements
-
-### Entities
+### Business Rules
 
 #### User Entity
-- First name, last name, email, password
-- Administrator status (boolean)
+- Personal information (first name, last name, email, password)
+- Administrator identification
 - CRUD operations
 
 #### Place Entity
-- Title, description, price, latitude, longitude
+- Property details (title, description, price, location)
 - Owner association
-- Amenities list
+- Amenities integration
 - CRUD operations
 
 #### Review Entity
-- Rating and comment
-- Place and user association
+- Association with places and users
+- Rating and comment functionality
 - CRUD operations
 
 #### Amenity Entity
-- Name and description
+- Name and description attributes
 - CRUD operations
+- Association with places
 
-### Common Requirements
-- UUID4 for all objects
-- Creation and update timestamps for all entities
+## Part 2: Implementation
 
-## Architecture
+### Objective
+Build the Presentation and Business Logic layers of the application using Python and Flask, based on the architectural design from Part 1.
 
-The application follows a layered architecture divided into:
-- Presentation Layer (Services & API)
-- Business Logic Layer (Models)
-- Persistence Layer (Database)
+### Key Components
+
+#### Project Setup
+- Organized modular structure
+- Initialization of necessary packages
+- Setup for layered architecture
+- Implementation of the in-memory repository (temporary solution before database integration)
+
+#### Business Logic Classes
+- Implementation of core entities (User, Place, Review, Amenity)
+- Entity relationships
+- Data validation logic
+- UUID implementation for unique identification
+
+#### API Endpoints
+
+##### User Management
+- Create user (POST /api/v1/users/)
+- Retrieve users (GET /api/v1/users/)
+- Get user by ID (GET /api/v1/users/{user_id})
+- Update user (PUT /api/v1/users/{user_id})
+
+##### Amenity Management
+- Create amenity (POST /api/v1/amenities/)
+- Retrieve amenities (GET /api/v1/amenities/)
+- Get amenity by ID (GET /api/v1/amenities/{amenity_id})
+- Update amenity (PUT /api/v1/amenities/{amenity_id})
+
+##### Place Management
+- Create place (POST /api/v1/places/)
+- Retrieve places (GET /api/v1/places/)
+- Get place by ID (GET /api/v1/places/{place_id})
+- Update place (PUT /api/v1/places/{place_id})
+
+##### Review Management
+- Create review (POST /api/v1/reviews/)
+- Retrieve reviews (GET /api/v1/reviews/)
+- Get review by ID (GET /api/v1/reviews/{review_id})
+- Update review (PUT /api/v1/reviews/{review_id})
+- Delete review (DELETE /api/v1/reviews/{review_id})
+
+### Testing and Validation
+- Input validation implementation
+- API testing using cURL
+- Swagger documentation
+- Unit testing with unittest/pytest
+
+## Technologies Used
+- Python
+- Flask framework
+- Flask-RESTx for API development
+- UML for system design
+- JSON for data exchange
+- UUID for unique identifiers
+
+## Future Extensions
+- Database integration using SQLAlchemy (Part 3)
+- JWT authentication
+- Role-based access control
+- Enhanced search functionality
+- User interface development
 
 ## Installation and Setup
-[À venir - Instructions d'installation]
 
-## Contributing
+### Requirements
+- Python 3.8+
+- Flask
+- Flask-RESTx
+- Other dependencies listed in requirements.txt
 
-This is an educational project. While it's not open for public contributions, feedback and suggestions are welcome.
+### Setup Instructions
+1. Clone the repository
+   ```
+   git clone https://github.com/yourusername/holbertonschool-hbnb.git
+   ```
 
-## License
+2. Navigate to the project directory
+   ```
+   cd holbertonschool-hbnb
+   ```
 
-This project is part of the curriculum at Holberton School. All rights reserved.
+3. Install dependencies
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Run the application
+   ```
+   python3 app.py
+   ```
+
+5. Access the API documentation
+   ```
+   http://localhost:5000/api/v1/
+   ```
 
 ## Authors
 
-- Stan QUEUNIEZ
-- Killian LEMOINE
-
-## Acknowledgments
-
-- This project is inspired by AirBnB
-- Special thanks to our school and mentors
+- Stan QUEUNIEZ - [Holberton School](https://www.holbertonschool.com)
+- Killian LEMOINE - [Holberton School](https://www.holbertonschool.com)

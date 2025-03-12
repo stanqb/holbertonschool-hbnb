@@ -15,6 +15,25 @@ class Amenity:
             )
         return name
 
+    def validate(self):
+        """Validate all amenity data and return a list of errors"""
+        errors = []
+
+        # Validate name
+        if not self.name or self.name.strip() == "":
+            errors.append("Amenity name cannot be empty")
+        elif len(self.name) > 50:
+            errors.append("Amenity name must be a maximum of 50 characters")
+
+        return errors
+
     def update(self, updated_data):
         """Update the informations"""
         self.name = updated_data.get('name', self.name)
+
+    def to_dict(self):
+        """Return a dictionary representation of the amenity"""
+        return {
+            'id': self.id,
+            'name': self.name
+        }

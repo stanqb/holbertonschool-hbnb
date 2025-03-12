@@ -66,7 +66,7 @@ place_detail_model = api.model('PlaceDetail', {
 })
 
 
-@api.route('')
+@api.route('/')  # MODIFIÉ: Utilisation de '/' au lieu de ''
 class PlaceList(Resource):
     @api.expect(place_input_model)
     @api.response(201, 'Place successfully created')
@@ -74,6 +74,42 @@ class PlaceList(Resource):
     def post(self):
         """Register a new place"""
         data = request.get_json()
+
+        # Manual validation of the data
+        errors = []
+
+        # Validate title
+        if not data.get('title') or data['title'].strip() == "":
+            errors.append("Title cannot be empty")
+        elif len(data.get('title', '')) > 100:
+            errors.append("Title must be a maximum of 100 characters")
+
+        # Validate price
+        if not isinstance(data.get('price'), (int, float)):
+            errors.append("Price must be a number")
+        elif data.get('price', 0) <= 0:
+            errors.append("Price must be a positive number")
+
+        # Validate latitude
+        if not isinstance(data.get('latitude'), (int, float)):
+            errors.append("Latitude must be a number")
+        elif not (-90.0 <= data.get('latitude', 0) <= 90.0):
+            errors.append("Latitude must be between -90 and 90")
+
+        # Validate longitude
+        if not isinstance(data.get('longitude'), (int, float)):
+            errors.append("Longitude must be a number")
+        elif not (-180.0 <= data.get('longitude', 0) <= 180.0):
+            errors.append("Longitude must be between -180 and 180")
+
+        # Validate owner_id
+        if not data.get('owner_id'):
+            errors.append("Owner ID cannot be empty")
+
+        # Return errors if any
+        if errors:
+            return {'error': 'Invalid input data', 'details': errors}, 400
+
         try:
             new_place = facade.create_place(data)
             # Return the place data directly as shown in the example
@@ -108,6 +144,58 @@ class PlaceResource(Resource):
     def put(self, place_id):
         """Update a place's information"""
         data = request.get_json()
+
+        # Get the existing place
+        existing_place = facade.get_place_by_id(place_id)
+        if not existing_place:
+            return {'error': 'Place not found'}, 404
+
+        # Prepare data for validation by merging existing with updates
+        merged_data = {
+            'title': existing_place.get('title', ''),
+            'description': existing_place.get('description', ''),
+            'price': existing_place.get('price', 0),
+            'latitude': existing_place.get('latitude', 0),
+            'longitude': existing_place.get('longitude', 0),
+            'owner_id': existing_place.get('owner_id', '')
+        }
+
+        # Update with new data
+        for key, value in data.items():
+            if key in merged_data:
+                merged_data[key] = value
+
+        # Manual validation of the merged data
+        errors = []
+
+        # Validate title
+        if not merged_data.get('title') or merged_data['title'].strip() == "":
+            errors.append("Title cannot be empty")
+        elif len(merged_data.get('title', '')) > 100:
+            errors.append("Title must be a maximum of 100 characters")
+
+        # Validate price
+        if not isinstance(merged_data.get('price'), (int, float)):
+            errors.append("Price must be a number")
+        elif merged_data.get('price', 0) <= 0:
+            errors.append("Price must be a positive number")
+
+        # Validate latitude
+        if not isinstance(merged_data.get('latitude'), (int, float)):
+            errors.append("Latitude must be a number")
+        elif not (-90.0 <= merged_data.get('latitude', 0) <= 90.0):
+            errors.append("Latitude must be between -90 and 90")
+
+        # Validate longitude
+        if not isinstance(merged_data.get('longitude'), (int, float)):
+            errors.append("Longitude must be a number")
+        elif not (-180.0 <= merged_data.get('longitude', 0) <= 180.0):
+            errors.append("Longitude must be between -180 and 180")
+
+        # Return errors if any
+        if errors:
+            return {'error': 'Invalid input data', 'details': errors}, 400
+
         try:
             result = facade.update_place(place_id, data)
             if not result:
@@ -116,3 +204,10 @@ class PlaceResource(Resource):
             return {'message': 'Place updated successfully'}, 200
         except ValueError as e:
             return {'error': str(e)}, 400
+
+
+@api.route('/test')
+class PlaceTest(Resource):
+    def get(self):
+        """Test route to verify places API is working"""
+        return {"message": "Places API is working correctly"}, 200
