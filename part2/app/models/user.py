@@ -7,10 +7,17 @@ class User:
     def __init__(self, first_name, last_name, email, password=None):
         """user's instance init"""
         self.id = str(uuid.uuid4())
+<<<<<<< HEAD
+        self.first_name = self.validate_name(first_name)
+        self.last_name = self.validate_name(last_name)
+        self.email = self.validate_email(email)
+        self.password = self.validate_password(password)
+=======
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
         self.password = password
+>>>>>>> 768504cb6c5581ea375d3c4df2d20e8f3fdbea47
 
     def validate_name(self, name):
         """verification of name"""
@@ -24,6 +31,13 @@ class User:
             raise ValueError("Invalid email format.")
         return email
 
+<<<<<<< HEAD
+    def validate_password(self, password):
+        """Verification of password length"""
+        if not password or len(password) <= 5:
+            raise ValueError("Password must be longer than 5 characters.")
+        return password
+=======
     def validate(self):
         """Validate all user data and return a list of errors"""
         errors = []
@@ -42,6 +56,7 @@ class User:
             errors.append("Invalid email format")
 
         return errors
+>>>>>>> 768504cb6c5581ea375d3c4df2d20e8f3fdbea47
 
     def update(self, updated_data):
         """instance to update user's data"""
@@ -49,7 +64,7 @@ class User:
         self.last_name = updated_data.get('last_name', self.last_name)
         self.email = updated_data.get('email', self.email)
         if 'password' in updated_data:
-            self.password = updated_data['password']
+            self.password = self.validate_password(updated_data['password'])
 
     def to_dict(self):
         """Return a dictionary representation of the user"""
