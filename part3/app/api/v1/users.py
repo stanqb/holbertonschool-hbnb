@@ -14,7 +14,11 @@ user_model = api.model('User', {
         required=True,
         description='Last name of the user'
     ),
-    'email': fields.String(required=True, description='Email of the user')
+    'email': fields.String(required=True, description='Email of the user'),
+    'password': fields.String(
+        required=True,
+        description='Password for authentication'
+    )
 })
 
 
@@ -53,6 +57,12 @@ class UserList(Resource):
                 email_pattern, user_data['email']):
             errors.append("Invalid email format")
 
+        # Validate password
+        if not user_data.get('password') or len(user_data['password']) < 6:
+            errors.append(
+                "Password is required and must be at least 6 characters long"
+            )
+
         # Return errors if any
         if errors:
             return {'error': 'Invalid input data', 'details': errors}, 400
@@ -63,6 +73,7 @@ class UserList(Resource):
             'first_name': new_user.first_name,
             'last_name': new_user.last_name,
             'email': new_user.email
+            # Password is intentionally NOT returned
         }, 201
 
     @api.response(200, 'User list successfully retrieved')
@@ -75,6 +86,7 @@ class UserList(Resource):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'email': user.email
+                # Password is intentionally NOT returned
             }
             for user in users
         ], 200
@@ -94,4 +106,5 @@ class UserResource(Resource):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'email': user.email
+            # Password is intentionally NOT returned
         }, 200

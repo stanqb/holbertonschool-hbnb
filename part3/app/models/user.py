@@ -1,5 +1,6 @@
 import uuid
 import re
+from app import bcrypt
 
 
 class User:
@@ -10,7 +11,9 @@ class User:
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password
+        self.password = None
+        if password:
+            self.hash_password(password)
 
     def validate_name(self, name):
         """verification of name"""
@@ -43,16 +46,24 @@ class User:
 
         return errors
 
+    def hash_password(self, password):
+        """Hashes the password before storing it."""
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def verify_password(self, password):
+        """Verifies if the provided password matches the hashed password."""
+        return bcrypt.check_password_hash(self.password, password)
+
     def update(self, updated_data):
         """instance to update user's data"""
         self.first_name = updated_data.get('first_name', self.first_name)
         self.last_name = updated_data.get('last_name', self.last_name)
         self.email = updated_data.get('email', self.email)
         if 'password' in updated_data:
-            self.password = updated_data['password']
+            self.hash_password(updated_data['password'])
 
     def to_dict(self):
-        """Return a dictionary representation of the user"""
+        """Return a dictionary representation of the user without password"""
         return {
             'id': self.id,
             'first_name': self.first_name,
