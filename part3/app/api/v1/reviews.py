@@ -1,5 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 api = Namespace('reviews', description='Review operations')
 
@@ -20,10 +21,20 @@ class ReviewList(Resource):
     @api.expect(review_model)
     @api.response(201, 'Review successfully created')
     @api.response(400, 'Invalid input data')
+    @api.response(401, 'Authentication required')
+    @api.response(403, 'Permission denied')
+    @jwt_required()
     def post(self):
-        """Register a new review"""
+        """Register a new review (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
+
         # Get request data
         review_data = api.payload
+
+        # Set user_id to current user's id if not admin
+        if not current_user.get('is_admin', False):
+            review_data['user_id'] = current_user.get('id')
 
         # Manual validation of the data
         errors = []
@@ -97,13 +108,28 @@ class ReviewResource(Resource):
     @api.response(200, 'Review updated successfully')
     @api.response(404, 'Review not found')
     @api.response(400, 'Invalid input data')
+    @api.response(401, 'Authentication required')
+    @api.response(403, 'Permission denied')
+    @jwt_required()
     def put(self, review_id):
-        """Update a review's information"""
+        """Update a review's information (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
+
         # Get the review
         review = facade.get_review(review_id)
 
         if not review:
             api.abort(404, f"Review with id {review_id} not found")
+
+        # Check if user is the author of the review or an admin
+        if (review.user_id != current_user.get('id') and
+                not current_user.get('is_admin', False)):
+            return {
+                'error': (
+                    'Permission denied. You can only update your own reviews'
+                )
+            }, 403
 
         # Get update data
         update_data = api.payload
@@ -144,13 +170,28 @@ class ReviewResource(Resource):
 
     @api.response(200, 'Review deleted successfully')
     @api.response(404, 'Review not found')
+    @api.response(401, 'Authentication required')
+    @api.response(403, 'Permission denied')
+    @jwt_required()
     def delete(self, review_id):
-        """Delete a review"""
+        """Delete a review (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
+
         # Get the review
         review = facade.get_review(review_id)
 
         if not review:
             api.abort(404, f"Review with id {review_id} not found")
+
+        # Check if user is the author of the review or an admin
+        if (review.user_id != current_user.get('id') and
+                not current_user.get('is_admin', False)):
+            return {
+                'error': (
+                    'Permission denied. You can only delete your own reviews'
+                )
+            }, 403
 
         try:
             # Delete review

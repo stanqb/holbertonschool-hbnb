@@ -1,6 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 api = Namespace('places', description='Place operations')
 
@@ -66,14 +67,22 @@ place_detail_model = api.model('PlaceDetail', {
 })
 
 
-@api.route('/')  # MODIFIÉ: Utilisation de '/' au lieu de ''
+@api.route('/')
 class PlaceList(Resource):
     @api.expect(place_input_model)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
+    @api.response(401, 'Authentication required')
+    @jwt_required()
     def post(self):
-        """Register a new place"""
+        """Register a new place (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
         data = request.get_json()
+
+        # Set owner_id to current user's id if not provided or not admin
+        if not current_user.get('is_admin', False):
+            data['owner_id'] = current_user.get('id')
 
         # Manual validation of the data
         errors = []
@@ -141,14 +150,29 @@ class PlaceResource(Resource):
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
+    @api.response(401, 'Authentication required')
+    @api.response(403, 'Permission denied')
+    @jwt_required()
     def put(self, place_id):
-        """Update a place's information"""
+        """Update a place's information (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
         data = request.get_json()
 
         # Get the existing place
         existing_place = facade.get_place_by_id(place_id)
         if not existing_place:
             return {'error': 'Place not found'}, 404
+
+        # Check if user is the owner or an admin
+        if (existing_place.get('owner_id') != current_user.get('id') and
+                not current_user.get('is_admin', False)):
+            return {
+                'error': (
+                    'Permission denied. You must be the owner of this place '
+                    'or an admin to update it'
+                )
+            }, 403
 
         # Prepare data for validation by merging existing with updates
         merged_data = {

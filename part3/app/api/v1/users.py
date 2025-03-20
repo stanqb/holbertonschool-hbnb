@@ -1,6 +1,7 @@
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 import re
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 api = Namespace('users', description='User operations')
 
@@ -77,8 +78,15 @@ class UserList(Resource):
         }, 201
 
     @api.response(200, 'User list successfully retrieved')
+    @api.response(401, 'Authentication required')
+    @jwt_required()
     def get(self):
-        """Get list of all users"""
+        """Get list of all users (requires authentication)"""
+        # Check if the user is an admin
+        current_user = get_jwt_identity()
+        if not current_user.get('is_admin', False):
+            return {'error': 'Admin privileges required'}, 403
+
         users = facade.user_repo.get_all()
         return [
             {
@@ -96,8 +104,19 @@ class UserList(Resource):
 class UserResource(Resource):
     @api.response(200, 'User details retrieved successfully')
     @api.response(404, 'User not found')
+    @api.response(401, 'Authentication required')
+    @api.response(403, 'Access denied')
+    @jwt_required()
     def get(self, user_id):
-        """Get user details by ID"""
+        """Get user details by ID (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
+
+        # Check if the user is requesting their own data or is an admin
+        if (str(user_id) != current_user.get('id') and
+                not current_user.get('is_admin', False)):
+            return {'error': 'Access denied'}, 403
+
         user = facade.get_user(user_id)
         if not user:
             return {'error': 'User not found'}, 404

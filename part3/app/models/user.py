@@ -1,6 +1,9 @@
 import uuid
 import re
-from app import bcrypt
+from flask_bcrypt import Bcrypt
+
+# Create a local instance of Bcrypt for password hashing
+_bcrypt = Bcrypt()
 
 
 class User:
@@ -30,29 +33,28 @@ class User:
     def validate(self):
         """Validate all user data and return a list of errors"""
         errors = []
-
         # Validate first_name
         if not self.first_name or self.first_name.strip() == "":
             errors.append("First name cannot be empty")
-
         # Validate last_name
         if not self.last_name or self.last_name.strip() == "":
             errors.append("Last name cannot be empty")
-
         # Validate email format with a more detailed regex
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not self.email or not re.match(email_pattern, self.email):
             errors.append("Invalid email format")
-
         return errors
 
     def hash_password(self, password):
         """Hashes the password before storing it."""
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        # Use the local instance of Bcrypt
+        self.password = _bcrypt.generate_password_hash(password) \
+            .decode('utf-8')
 
     def verify_password(self, password):
         """Verifies if the provided password matches the hashed password."""
-        return bcrypt.check_password_hash(self.password, password)
+        # Use the local instance of Bcrypt
+        return _bcrypt.check_password_hash(self.password, password)
 
     def update(self, updated_data):
         """instance to update user's data"""
