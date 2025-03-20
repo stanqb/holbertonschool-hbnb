@@ -2,19 +2,23 @@ from app.models.user import User
 from app.models.amenity import Amenity
 from app.models.place import Place
 from app.models.review import Review
-from app.persistence.repository import InMemoryRepository
+from app.persistence.repository import SQLAlchemyRepository
+from app.services.repositories.user_repository import UserRepository
 
 
 class HBnBFacade:
     def __init__(self):
-        self.user_repo = InMemoryRepository()
-        self.amenity_repo = InMemoryRepository()
-        self.place_repo = InMemoryRepository()
-        self.review_repo = InMemoryRepository()
+        # Utilisation du UserRepository spécifique
+        self.user_repo = UserRepository()
+        self.amenity_repo = SQLAlchemyRepository(Amenity)
+        self.place_repo = SQLAlchemyRepository(Place)
+        self.review_repo = SQLAlchemyRepository(Review)
 
     def create_user(self, user_data):
         """create a user"""
         user = User(**user_data)
+        if 'password' in user_data:  # S'assurer que le mot de passe est haché
+            user.hash_password(user_data['password'])
         self.user_repo.add(user)
         return user
 
@@ -24,15 +28,14 @@ class HBnBFacade:
 
     def get_user_by_email(self, email):
         """get user info with email"""
-        return self.user_repo.get_by_attribute('email', email)
+        return self.user_repo.get_user_by_email(
+            email
+        )  # Utilisation de la méthode spécifique
 
     def update_user(self, user_id, updated_data):
         """Update user informations"""
-        user = self.user_repo.get(user_id)
-        if user:
-            user.update(updated_data)
-            return user
-        return None
+        self.user_repo.update(user_id, updated_data)
+        return self.user_repo.get(user_id)
 
     def create_amenity(self, amenity_data):
         amenity = Amenity(**amenity_data)
@@ -49,11 +52,8 @@ class HBnBFacade:
 
     def update_amenity(self, amenity_id, amenity_data):
         """Updates the information of an existing amenity."""
-        amenity = self.amenity_repo.get(amenity_id)
-        if amenity:
-            amenity.update(amenity_data)
-            return amenity
-        return None
+        self.amenity_repo.update(amenity_id, amenity_data)
+        return self.amenity_repo.get(amenity_id)
 
     def create_place(self, place_data):
         """Creates a new place with validation of attributes."""
@@ -106,20 +106,28 @@ class HBnBFacade:
         if not place:
             return None
 
+        update_data = {}
+
         if "title" in place_data:
-            place.title = Place.validate_title(place_data["title"])
+            update_data["title"] = Place.validate_title(place_data["title"])
         if "description" in place_data:
-            place.description = place_data["description"]
+            update_data["description"] = place_data["description"]
         if "price" in place_data:
-            place.price = place_data["price"]
+            update_data["price"] = place_data["price"]
         if "latitude" in place_data:
-            place.latitude = place_data["latitude"]
+            update_data["latitude"] = place_data["latitude"]
         if "longitude" in place_data:
-            place.longitude = place_data["longitude"]
+            update_data["longitude"] = place_data["longitude"]
         if "owner_id" in place_data:
             owner_id = place_data["owner_id"]
             if self.user_repo.get(owner_id):
-                place.owner_id = owner_id
+                update_data["owner_id"] = owner_id
+
+        # Update the place with collected data
+        if update_data:
+            self.place_repo.update(place_id, update_data)
+
+        place = self.place_repo.get(place_id)
 
         # Update amenities if provided
         if "amenities" in place_data:
@@ -130,6 +138,9 @@ class HBnBFacade:
                 amenity = self.amenity_repo.get(amenity_id)
                 if amenity:
                     place.add_amenity(amenity)
+
+            # Save the updated place with amenities
+            self.place_repo.add(place)
 
         return True  # Return True to indicate success as per API requirements
 
@@ -259,9 +270,9 @@ class HBnBFacade:
             except (ValueError, TypeError):
                 raise ValueError("rating must be a number between 0 and 5")
 
-        # Update review using update method
-        review.update(review_data)
-        return review
+        # Update review
+        self.review_repo.update(review_id, review_data)
+        return self.review_repo.get(review_id)
 
     def delete_review(self, review_id):
         """
@@ -282,4 +293,5 @@ class HBnBFacade:
             raise ValueError(f"Review with id {review_id} does not exist")
 
         # Delete the review
-        return self.review_repo.delete(review_id)
+        self.review_repo.delete(review_id)
+        return True

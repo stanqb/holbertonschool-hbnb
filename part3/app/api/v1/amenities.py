@@ -18,14 +18,14 @@ class AmenityList(Resource):
     @api.response(201, 'Amenity successfully created')
     @api.response(400, 'Invalid input data')
     @api.response(401, 'Authentication required')
+    @api.response(403, 'Admin privileges required')
     @jwt_required()
     def post(self):
-        """Register a new amenity (requires authentication)"""
+        """Register a new amenity (requires admin privileges)"""
         # Get current user from JWT token
         current_user = get_jwt_identity()
 
         # Check if user is admin
-        # (only admins should be able to create amenities)
         if not current_user.get('is_admin', False):
             return {
                 'error': 'Admin privileges required to create amenities'
@@ -69,15 +69,14 @@ class AmenityResource(Resource):
     @api.response(404, 'Amenity not found')
     @api.response(400, 'Invalid input data')
     @api.response(401, 'Authentication required')
-    @api.response(403, 'Permission denied')
+    @api.response(403, 'Admin privileges required')
     @jwt_required()
     def put(self, amenity_id):
-        """Update an amenity's information (requires authentication)"""
+        """Update an amenity's information (requires admin privileges)"""
         # Get current user from JWT token
         current_user = get_jwt_identity()
 
         # Check if user is admin
-        # (only admins should be able to update amenities)
         if not current_user.get('is_admin', False):
             return {
                 'error': 'Admin privileges required to update amenities'
@@ -97,4 +96,4 @@ class AmenityResource(Resource):
         if not updated_amenity:
             return {'error': 'Amenity not found'}, 404
 
-        return {'message': 'Amenity updated successfully'}, 200
+        return {'id': updated_amenity.id, 'name': updated_amenity.name}, 200

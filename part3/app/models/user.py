@@ -1,32 +1,42 @@
-import uuid
+from app import db, bcrypt
 import re
-from flask_bcrypt import Bcrypt
-
-# Create a local instance of Bcrypt for password hashing
-_bcrypt = Bcrypt()
+from sqlalchemy.orm import validates
+from .base_model import BaseModel
 
 
-class User:
+class User(BaseModel):
     """User's class"""
-    def __init__(self, first_name, last_name, email, password=None):
+    __tablename__ = 'users'
+
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(120), nullable=False, unique=True)
+    password = db.Column(db.String(128), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def __init__(self, first_name, last_name, email, password=None,
+                 is_admin=False):
         """user's instance init"""
-        self.id = str(uuid.uuid4())
+        super().__init__()  # Call the parent class's __init__ method
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = None
+        self.is_admin = is_admin
         if password:
             self.hash_password(password)
 
-    def validate_name(self, name):
+    @validates('first_name', 'last_name')
+    def validate_name(self, key, name):
         """verification of name"""
-        if not name:
-            raise ValueError("First name and last name cannot be empty.")
+        if not name or name.strip() == "":
+            raise ValueError(f"{key} cannot be empty.")
         return name
 
-    def validate_email(self, email):
+    @validates('email')
+    def validate_email(self, key, email):
         """verification of email"""
-        if not email or '@' not in email or '.' not in email.split('@')[-1]:
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not email or not re.match(email_pattern, email):
             raise ValueError("Invalid email format.")
         return email
 
@@ -47,22 +57,13 @@ class User:
 
     def hash_password(self, password):
         """Hashes the password before storing it."""
-        # Use the local instance of Bcrypt
-        self.password = _bcrypt.generate_password_hash(password) \
-            .decode('utf-8')
+        # Use the global instance of Bcrypt
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
 
     def verify_password(self, password):
         """Verifies if the provided password matches the hashed password."""
-        # Use the local instance of Bcrypt
-        return _bcrypt.check_password_hash(self.password, password)
-
-    def update(self, updated_data):
-        """instance to update user's data"""
-        self.first_name = updated_data.get('first_name', self.first_name)
-        self.last_name = updated_data.get('last_name', self.last_name)
-        self.email = updated_data.get('email', self.email)
-        if 'password' in updated_data:
-            self.hash_password(updated_data['password'])
+        # Use the global instance of Bcrypt
+        return bcrypt.check_password_hash(self.password, password)
 
     def to_dict(self):
         """Return a dictionary representation of the user without password"""
@@ -70,5 +71,10 @@ class User:
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'email': self.email
+            'email': self.email,
+            'is_admin': self.is_admin,
+            'created_at': self.created_at.isoformat()
+            if self.created_at else None,
+            'updated_at': self.updated_at.isoformat()
+            if self.updated_at else None
         }

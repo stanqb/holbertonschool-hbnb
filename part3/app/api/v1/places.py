@@ -150,6 +150,10 @@ class PlaceResource(Resource):
         """Update a place's information (requires authentication)"""
         # Get current user ID from JWT token
         current_user = get_jwt_identity()
+
+        # Set is_admin default to False if not exists
+        is_admin = current_user.get('is_admin', False)
+
         data = request.get_json()
 
         # Get the existing place
@@ -157,8 +161,8 @@ class PlaceResource(Resource):
         if not existing_place:
             return {'error': 'Place not found'}, 404
 
-        # Check if user is the owner of the place
-        if existing_place.get('owner_id') != current_user:
+        # Check if user is the owner of the place or an admin
+        if not is_admin and existing_place.get('owner_id') != current_user:
             return {'error': 'Unauthorized action'}, 403
 
         # Manual validation of the data
@@ -203,10 +207,3 @@ class PlaceResource(Resource):
             return {'message': 'Place updated successfully'}, 200
         except ValueError as e:
             return {'error': str(e)}, 400
-
-
-@api.route('/test')
-class PlaceTest(Resource):
-    def get(self):
-        """Test route to verify places API is working"""
-        return {"message": "Places API is working correctly"}, 200

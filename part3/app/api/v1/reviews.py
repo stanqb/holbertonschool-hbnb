@@ -120,14 +120,17 @@ class ReviewResource(Resource):
         # Get current user from JWT token
         current_user = get_jwt_identity()
 
+        # Set is_admin default to False if not exists
+        is_admin = current_user.get('is_admin', False)
+
         # Get the review
         review = facade.get_review(review_id)
 
         if not review:
             api.abort(404, f"Review with id {review_id} not found")
 
-        # Check if user is the author of the review
-        if review.user_id != current_user:
+        # Check if user is the author of the review or an admin
+        if not is_admin and review.user_id != current_user:
             return {'error': 'Unauthorized action'}, 403
 
         # Get update data
@@ -171,14 +174,17 @@ class ReviewResource(Resource):
         # Get current user from JWT token
         current_user = get_jwt_identity()
 
+        # Set is_admin default to False if not exists
+        is_admin = current_user.get('is_admin', False)
+
         # Get the review
         review = facade.get_review(review_id)
 
         if not review:
             api.abort(404, f"Review with id {review_id} not found")
 
-        # Check if user is the author of the review
-        if review.user_id != current_user:
+        # Check if user is the author of the review or an admin
+        if not is_admin and review.user_id != current_user:
             return {'error': 'Unauthorized action'}, 403
 
         try:

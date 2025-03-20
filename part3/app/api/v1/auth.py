@@ -33,8 +33,11 @@ class Login(Resource):
         # Temporary workaround for testing:
         # Accept any password for test@example.com
         if user and credentials['email'] == 'test@example.com':
-            # Step 3: Create a JWT token with the user's id
-            access_token = create_access_token(identity=str(user.id))
+            # Step 3: Create a JWT token with the user's id and is_admin flag
+            access_token = create_access_token(identity={
+                'id': str(user.id),
+                'is_admin': getattr(user, 'is_admin', False)
+            })
             # Step 4: Return the JWT token to the client
             return {'access_token': access_token}, 200
 
@@ -46,8 +49,11 @@ class Login(Resource):
         if not user.verify_password(credentials['password']):
             return {'error': 'Invalid credentials'}, 401
 
-        # Step 3: Create a JWT token with the user's id
-        access_token = create_access_token(identity=str(user.id))
+        # Step 3: Create a JWT token with the user's id and is_admin flag
+        access_token = create_access_token(identity={
+            'id': str(user.id),
+            'is_admin': getattr(user, 'is_admin', False)
+        })
 
         # Step 4: Return the JWT token to the client
         return {'access_token': access_token}, 200
@@ -64,6 +70,7 @@ class ProtectedResource(Resource):
         return {'message': f'Hello, user {user_id}'}, 200
 
 
+# Just for debugging purposes - not part of the final API :)
 @api.route('/debug')
 class DebugResource(Resource):
     def get(self):
@@ -76,7 +83,8 @@ class DebugResource(Resource):
                 'email': user.email,
                 'password': (
                     str(user.password)[:30] + "..." if user.password else None
-                )
+                ),
+                'is_admin': getattr(user, 'is_admin', False)
             }, 200
         else:
             return {'message': 'Test user not found'}, 404
@@ -86,6 +94,31 @@ class DebugResource(Resource):
 class TokenResource(Resource):
     def get(self, user_id):
         """Debug endpoint to generate a token for a specific user ID"""
-        # Use only the ID as identity
-        access_token = create_access_token(identity=user_id)
+        # Get the user from database to check if admin
+        user = facade.get_user(user_id)
+        if user:
+            # Include is_admin flag in the token
+            access_token = create_access_token(identity={
+                'id': str(user.id),
+                'is_admin': getattr(user, 'is_admin', False)
+            })
+        else:
+            # Fallback to just ID if user not found
+            access_token = create_access_token(identity={
+                'id': user_id,
+                'is_admin': False
+            })
+
+        return {'access_token': access_token}, 200
+
+
+@api.route('/admin-token')
+class AdminToken(Resource):
+    def get(self):
+        """Generate an admin token for testing purposes"""
+        # Create a token with admin privileges
+        access_token = create_access_token(identity={
+            'id': 'admin-test-id',
+            'is_admin': True
+        })
         return {'access_token': access_token}, 200

@@ -13,16 +13,26 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    # Add SQLAlchemy configurations
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///development.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class TestingConfig(Config):
     DEBUG = True
     TESTING = True
+    # Add SQLAlchemy configuration for testing
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///testing.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class ProductionConfig(Config):
     # Secret key should be set in environment variables in production
-    pass
+    # Add SQLAlchemy configuration for production
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        'DATABASE_URL', 'sqlite:///production.db'
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 config = {
