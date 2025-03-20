@@ -35,15 +35,16 @@ place_input_model = api.model('PlaceInput', {
     'latitude': fields.Float(required=True,
                              description='Latitude of the place'),
     'longitude': fields.Float(required=True,
-                              description='Longitude of the place'),
-    'owner_id': fields.String(required=True, description='ID of the owner')
+                              description='Longitude of the place')
 })
 
 # Model for updates
 place_update_model = api.model('PlaceUpdate', {
     'title': fields.String(description='Title of the place'),
     'description': fields.String(description='Description of the place'),
-    'price': fields.Float(description='Price per night')
+    'price': fields.Float(description='Price per night'),
+    'latitude': fields.Float(description='Latitude of the place'),
+    'longitude': fields.Float(description='Longitude of the place')
 })
 
 # Detailed place model for responses (including relationships)
@@ -76,13 +77,12 @@ class PlaceList(Resource):
     @jwt_required()
     def post(self):
         """Register a new place (requires authentication)"""
-        # Get current user from JWT token
+        # Get current user ID from JWT token
         current_user = get_jwt_identity()
         data = request.get_json()
 
-        # Set owner_id to current user's id if not provided or not admin
-        if not current_user.get('is_admin', False):
-            data['owner_id'] = current_user.get('id')
+        # Set owner_id to current user's id
+        data['owner_id'] = current_user
 
         # Manual validation of the data
         errors = []
@@ -111,17 +111,12 @@ class PlaceList(Resource):
         elif not (-180.0 <= data.get('longitude', 0) <= 180.0):
             errors.append("Longitude must be between -180 and 180")
 
-        # Validate owner_id
-        if not data.get('owner_id'):
-            errors.append("Owner ID cannot be empty")
-
         # Return errors if any
         if errors:
             return {'error': 'Invalid input data', 'details': errors}, 400
 
         try:
             new_place = facade.create_place(data)
-            # Return the place data directly as shown in the example
             return new_place, 201
         except ValueError as e:
             return {'error': str(e)}, 400
@@ -130,7 +125,6 @@ class PlaceList(Resource):
     def get(self):
         """Retrieve a list of all places"""
         places = facade.get_all_places()
-        # Return the list of places directly in the expected format
         return places, 200
 
 
@@ -143,7 +137,6 @@ class PlaceResource(Resource):
         place = facade.get_place_by_id(place_id)
         if not place:
             return {'error': 'Place not found'}, 404
-        # Return the place with its relationships as shown in the example
         return place, 200
 
     @api.expect(place_update_model)
@@ -151,11 +144,11 @@ class PlaceResource(Resource):
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
     @api.response(401, 'Authentication required')
-    @api.response(403, 'Permission denied')
+    @api.response(403, 'Unauthorized action')
     @jwt_required()
     def put(self, place_id):
         """Update a place's information (requires authentication)"""
-        # Get current user from JWT token
+        # Get current user ID from JWT token
         current_user = get_jwt_identity()
         data = request.get_json()
 
@@ -164,57 +157,40 @@ class PlaceResource(Resource):
         if not existing_place:
             return {'error': 'Place not found'}, 404
 
-        # Check if user is the owner or an admin
-        if (existing_place.get('owner_id') != current_user.get('id') and
-                not current_user.get('is_admin', False)):
-            return {
-                'error': (
-                    'Permission denied. You must be the owner of this place '
-                    'or an admin to update it'
-                )
-            }, 403
+        # Check if user is the owner of the place
+        if existing_place.get('owner_id') != current_user:
+            return {'error': 'Unauthorized action'}, 403
 
-        # Prepare data for validation by merging existing with updates
-        merged_data = {
-            'title': existing_place.get('title', ''),
-            'description': existing_place.get('description', ''),
-            'price': existing_place.get('price', 0),
-            'latitude': existing_place.get('latitude', 0),
-            'longitude': existing_place.get('longitude', 0),
-            'owner_id': existing_place.get('owner_id', '')
-        }
-
-        # Update with new data
-        for key, value in data.items():
-            if key in merged_data:
-                merged_data[key] = value
-
-        # Manual validation of the merged data
+        # Manual validation of the data
         errors = []
 
         # Validate title
-        if not merged_data.get('title') or merged_data['title'].strip() == "":
-            errors.append("Title cannot be empty")
-        elif len(merged_data.get('title', '')) > 100:
-            errors.append("Title must be a maximum of 100 characters")
+        if 'title' in data:
+            if not data.get('title') or data['title'].strip() == "":
+                errors.append("Title cannot be empty")
+            elif len(data.get('title', '')) > 100:
+                errors.append("Title must be a maximum of 100 characters")
 
         # Validate price
-        if not isinstance(merged_data.get('price'), (int, float)):
-            errors.append("Price must be a number")
-        elif merged_data.get('price', 0) <= 0:
-            errors.append("Price must be a positive number")
+        if 'price' in data:
+            if not isinstance(data.get('price'), (int, float)):
+                errors.append("Price must be a number")
+            elif data.get('price', 0) <= 0:
+                errors.append("Price must be a positive number")
 
         # Validate latitude
-        if not isinstance(merged_data.get('latitude'), (int, float)):
-            errors.append("Latitude must be a number")
-        elif not (-90.0 <= merged_data.get('latitude', 0) <= 90.0):
-            errors.append("Latitude must be between -90 and 90")
+        if 'latitude' in data:
+            if not isinstance(data.get('latitude'), (int, float)):
+                errors.append("Latitude must be a number")
+            elif not (-90.0 <= data.get('latitude', 0) <= 90.0):
+                errors.append("Latitude must be between -90 and 90")
 
         # Validate longitude
-        if not isinstance(merged_data.get('longitude'), (int, float)):
-            errors.append("Longitude must be a number")
-        elif not (-180.0 <= merged_data.get('longitude', 0) <= 180.0):
-            errors.append("Longitude must be between -180 and 180")
+        if 'longitude' in data:
+            if not isinstance(data.get('longitude'), (int, float)):
+                errors.append("Longitude must be a number")
+            elif not (-180.0 <= data.get('longitude', 0) <= 180.0):
+                errors.append("Longitude must be between -180 and 180")
 
         # Return errors if any
         if errors:
@@ -224,7 +200,6 @@ class PlaceResource(Resource):
             result = facade.update_place(place_id, data)
             if not result:
                 return {'error': 'Place not found'}, 404
-            # Return the confirmation message as shown in the example
             return {'message': 'Place updated successfully'}, 200
         except ValueError as e:
             return {'error': str(e)}, 400

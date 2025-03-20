@@ -11,8 +11,13 @@ review_model = api.model('Review', {
         required=True,
         description='Rating of the place (1-5)'
     ),
-    'user_id': fields.String(required=True, description='ID of the user'),
     'place_id': fields.String(required=True, description='ID of the place')
+})
+
+# Model for updating reviews
+review_update_model = api.model('ReviewUpdate', {
+    'text': fields.String(description='Text of the review'),
+    'rating': fields.Integer(description='Rating of the place (1-5)')
 })
 
 
@@ -32,9 +37,24 @@ class ReviewList(Resource):
         # Get request data
         review_data = api.payload
 
-        # Set user_id to current user's id if not admin
-        if not current_user.get('is_admin', False):
-            review_data['user_id'] = current_user.get('id')
+        # Set user_id to current user's id
+        review_data['user_id'] = current_user
+
+        # Validation for place ownership
+        place = facade.get_place_by_id(review_data.get('place_id'))
+        if not place:
+            return {'error': 'Place not found'}, 404
+
+        # Check if user is the owner of the place
+        if place.get('owner_id') == current_user:
+            return {'error': 'You cannot review your own place'}, 400
+
+        # Check if user has already reviewed this place
+        all_reviews = facade.get_all_reviews()
+        for review in all_reviews:
+            if (review.user_id == current_user and
+                    review.place_id == review_data.get('place_id')):
+                return {'error': 'You have already reviewed this place'}, 400
 
         # Manual validation of the data
         errors = []
@@ -51,25 +71,9 @@ class ReviewList(Resource):
         except (ValueError, TypeError):
             errors.append("Rating must be an integer between 1 and 5")
 
-        # Validate user_id and place_id
-        if not review_data.get('user_id'):
-            errors.append("User ID cannot be empty")
-
+        # Validate place_id
         if not review_data.get('place_id'):
             errors.append("Place ID cannot be empty")
-
-        # Verify user and place exist if possible
-        try:
-            if not facade.get_user(review_data.get('user_id')):
-                errors.append("Invalid user_id - user not found")
-        except Exception:
-            errors.append("Invalid user_id - user not found")
-
-        try:
-            if not facade.get_place_by_id(review_data.get('place_id')):
-                errors.append("Invalid place_id - place not found")
-        except Exception:
-            errors.append("Invalid place_id - place not found")
 
         # Return errors if any
         if errors:
@@ -104,12 +108,12 @@ class ReviewResource(Resource):
 
         return review.to_dict(), 200
 
-    @api.expect(review_model)
+    @api.expect(review_update_model)
     @api.response(200, 'Review updated successfully')
     @api.response(404, 'Review not found')
     @api.response(400, 'Invalid input data')
     @api.response(401, 'Authentication required')
-    @api.response(403, 'Permission denied')
+    @api.response(403, 'Unauthorized action')
     @jwt_required()
     def put(self, review_id):
         """Update a review's information (requires authentication)"""
@@ -122,23 +126,12 @@ class ReviewResource(Resource):
         if not review:
             api.abort(404, f"Review with id {review_id} not found")
 
-        # Check if user is the author of the review or an admin
-        if (review.user_id != current_user.get('id') and
-                not current_user.get('is_admin', False)):
-            return {
-                'error': (
-                    'Permission denied. You can only update your own reviews'
-                )
-            }, 403
+        # Check if user is the author of the review
+        if review.user_id != current_user:
+            return {'error': 'Unauthorized action'}, 403
 
         # Get update data
         update_data = api.payload
-
-        # Don't allow updating user_id or place_id
-        if 'user_id' in update_data:
-            del update_data['user_id']
-        if 'place_id' in update_data:
-            del update_data['place_id']
 
         # Manual validation of the update data
         errors = []
@@ -171,7 +164,7 @@ class ReviewResource(Resource):
     @api.response(200, 'Review deleted successfully')
     @api.response(404, 'Review not found')
     @api.response(401, 'Authentication required')
-    @api.response(403, 'Permission denied')
+    @api.response(403, 'Unauthorized action')
     @jwt_required()
     def delete(self, review_id):
         """Delete a review (requires authentication)"""
@@ -184,14 +177,9 @@ class ReviewResource(Resource):
         if not review:
             api.abort(404, f"Review with id {review_id} not found")
 
-        # Check if user is the author of the review or an admin
-        if (review.user_id != current_user.get('id') and
-                not current_user.get('is_admin', False)):
-            return {
-                'error': (
-                    'Permission denied. You can only delete your own reviews'
-                )
-            }, 403
+        # Check if user is the author of the review
+        if review.user_id != current_user:
+            return {'error': 'Unauthorized action'}, 403
 
         try:
             # Delete review

@@ -22,6 +22,12 @@ user_model = api.model('User', {
     )
 })
 
+# Model for updating user information
+user_update_model = api.model('UserUpdate', {
+    'first_name': fields.String(description='First name of the user'),
+    'last_name': fields.String(description='Last name of the user')
+})
+
 
 @api.route('/')
 class UserList(Resource):
@@ -113,7 +119,7 @@ class UserResource(Resource):
         current_user = get_jwt_identity()
 
         # Check if the user is requesting their own data or is an admin
-        if (str(user_id) != current_user.get('id') and
+        if (str(user_id) != current_user and
                 not current_user.get('is_admin', False)):
             return {'error': 'Access denied'}, 403
 
@@ -125,5 +131,52 @@ class UserResource(Resource):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'email': user.email
+            # Password is intentionally NOT returned
+        }, 200
+
+    @api.expect(user_update_model)
+    @api.response(200, 'User updated successfully')
+    @api.response(400, 'Invalid input data')
+    @api.response(401, 'Authentication required')
+    @api.response(403, 'Unauthorized action')
+    @api.response(404, 'User not found')
+    @jwt_required()
+    def put(self, user_id):
+        """Modify user information (requires authentication)"""
+        # Get current user from JWT token
+        current_user = get_jwt_identity()
+
+        # Check if the user is modifying their own data
+        if str(user_id) != current_user:
+            return {'error': 'Unauthorized action'}, 403
+
+        user_data = api.payload
+
+        # Prevent modifying email and password through this endpoint
+        if 'email' in user_data or 'password' in user_data:
+            return {'error': 'You cannot modify email or password'}, 400
+
+        # Validate first_name if provided
+        if 'first_name' in user_data and (
+            not user_data.get('first_name') or
+            user_data['first_name'].strip() == ""
+        ):
+            return {'error': 'First name cannot be empty'}, 400
+
+        # Validate last_name if provided
+        if 'last_name' in user_data and (not user_data.get('last_name') or
+                                         user_data['last_name'].strip() == ""):
+            return {'error': 'Last name cannot be empty'}, 400
+
+        # Update user
+        updated_user = facade.update_user(user_id, user_data)
+        if not updated_user:
+            return {'error': 'User not found'}, 404
+
+        return {
+            'id': updated_user.id,
+            'first_name': updated_user.first_name,
+            'last_name': updated_user.last_name,
+            'email': updated_user.email
             # Password is intentionally NOT returned
         }, 200
