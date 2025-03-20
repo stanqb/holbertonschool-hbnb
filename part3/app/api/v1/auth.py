@@ -92,6 +92,6 @@ class DebugResource(Resource):
 class TokenResource(Resource):
     def get(self, user_id):
         """Debug endpoint to generate a token for a specific user ID"""
-        # Utiliser uniquement l'ID comme identité (subject)
+        # Use only the ID as identity (subject)
         access_token = create_access_token(identity=user_id)
         return {'access_token': access_token}, 200
