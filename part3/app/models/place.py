@@ -1,106 +1,101 @@
-from uuid import uuid4
+from app import db
+from sqlalchemy.orm import validates, relationship
 from .base_model import BaseModel
 
 
-class Place(BaseModel):
-    def __init__(self, title, description, price, latitude,
-                 longitude, owner_id):
-        super().__init__()
-        self.id = str(uuid4())  # Explicitly defined to match requirements
-        self.title = self.validate_title(title)
-        self.description = description or ""
-        self._price = self.validate_price(price)
-        self._latitude = self.validate_latitude(latitude)
-        self._longitude = self.validate_longitude(longitude)
-        self.owner_id = owner_id  # Store the ID instead of User object
-        self.amenities = []  # Keep the amenities list
-        self.owner = None  # To store the owner object when needed
+place_amenity = db.Table(
+    'place_amenity',
+    db.Column(
+        'place_id', db.String(36), db.ForeignKey('places.id'), primary_key=True
+    ),
+    db.Column(
+        'amenity_id', db.String(36),
+        db.ForeignKey('amenities.id'),
+        primary_key=True
+    )
+)
 
-    @staticmethod
-    def validate_title(title):
-        if not isinstance(title, str) or len(title) > 100:
-            raise ValueError(
-                "The title must be a string with a maximum of 100 characters."
-            )
+
+class Place(BaseModel):
+    """Place model representing a rental property"""
+    __tablename__ = 'places'
+
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    price = db.Column(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+
+    # Foreign key for the owner (User)
+    owner_id = db.Column(
+        db.String(36), db.ForeignKey('users.id'), nullable=False
+    )
+
+    # Relationships
+    # One-to-many: Place has many Reviews
+    reviews = relationship(
+        'Review',
+        backref='place',
+        lazy='dynamic',
+        cascade="all, delete-orphan"
+    )
+
+    # Many-to-many: Place has many Amenities
+    amenities = relationship(
+        'Amenity',
+        secondary=place_amenity,
+        lazy='subquery',
+        backref=db.backref('places', lazy=True)
+    )
+
+    # Relationship to the owner (User)
+    owner = relationship('User', back_populates='places')
+
+    def __init__(
+        self, title, description, price, latitude, longitude, owner_id
+    ):
+        """Initialize a new place"""
+        super().__init__()
+        self.title = title
+        self.description = description or ""
+        self.price = price
+        self.latitude = latitude
+        self.longitude = longitude
+        self.owner_id = owner_id
+
+    @validates('title')
+    def validate_title(self, key, title):
+        """Validate the title of the place"""
+        if not title or title.strip() == "":
+            raise ValueError("Title cannot be empty")
+        if len(title) > 100:
+            raise ValueError("Title must be a maximum of 100 characters")
         return title
 
-    @staticmethod
-    def validate_price(price):
-        if not isinstance(price, (int, float)) or price < 0:
-            raise ValueError("The price must be a positive number.")
+    @validates('price')
+    def validate_price(self, key, price):
+        """Validate the price of the place"""
+        if not isinstance(price, (int, float)) or price <= 0:
+            raise ValueError("Price must be a positive number")
         return price
 
-    @staticmethod
-    def validate_latitude(lat):
-        if not isinstance(lat, (int, float)) or not (-90.0 <= lat <= 90.0):
-            raise ValueError("Invalid latitude, must be between -90 and 90.")
-        return lat
+    @validates('latitude')
+    def validate_latitude(self, key, latitude):
+        """Validate the latitude of the place"""
+        if not isinstance(latitude, (int, float)) or not (
+            -90.0 <= latitude <= 90.0
+        ):
+            raise ValueError("Latitude must be between -90 and 90")
+        return latitude
 
-    @staticmethod
-    def validate_longitude(lon):
-        if not isinstance(lon, (int, float)) or not (-180.0 <= lon <= 180.0):
-            raise ValueError(
-                "Invalid longitude, must be between -180 and 180."
-            )
-        return lon
-
-    def validate(self):
-        """Validate all place data and return a list of errors"""
-        errors = []
-
-        # Validate title
-        if not self.title or self.title.strip() == "":
-            errors.append("Title cannot be empty")
-        elif len(self.title) > 100:
-            errors.append("Title must be a maximum of 100 characters")
-
-        # Validate price
-        if not isinstance(self._price, (int, float)):
-            errors.append("Price must be a number")
-        elif self._price <= 0:
-            errors.append("Price must be a positive number")
-
-        # Validate latitude
-        if not isinstance(self._latitude, (int, float)):
-            errors.append("Latitude must be a number")
-        elif not (-90.0 <= self._latitude <= 90.0):
-            errors.append("Latitude must be between -90 and 90")
-
-        # Validate longitude
-        if not isinstance(self._longitude, (int, float)):
-            errors.append("Longitude must be between -180 and 180")
-        elif not (-180.0 <= self._longitude <= 180.0):
-            errors.append("Longitude must be between -180 and 180")
-
-        # Validate owner_id
-        if not self.owner_id:
-            errors.append("Owner ID cannot be empty")
-
-        return errors
-
-    @property
-    def price(self):
-        return self._price
-
-    @price.setter
-    def price(self, value):
-        self._price = self.validate_price(value)
-
-    @property
-    def latitude(self):
-        return self._latitude
-
-    @latitude.setter
-    def latitude(self, value):
-        self._latitude = self.validate_latitude(value)
-
-    @property
-    def longitude(self):
-        return self._longitude
-
-    @longitude.setter
-    def longitude(self, value):
-        self._longitude = self.validate_longitude(value)
+    @validates('longitude')
+    def validate_longitude(self, key, longitude):
+        """Validate the longitude of the place"""
+        if not isinstance(longitude, (int, float)) or not (
+            -180.0 <= longitude <= 180.0
+        ):
+            raise ValueError("Longitude must be between -180 and 180")
+        return longitude
 
     def add_amenity(self, amenity):
         """Add an amenity to this place"""
@@ -108,42 +103,49 @@ class Place(BaseModel):
             self.amenities.append(amenity)
 
     def to_dict(self):
-        """Convert the object to a dictionary according to API format"""
+        """Return a dictionary representation of the place"""
         return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "price": self.price,
-            "latitude": self.latitude,
-            "longitude": self.longitude,
-            "owner_id": self.owner_id
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'price': self.price,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'owner_id': self.owner_id,
+            'created_at': (
+                self.created_at.isoformat() if self.created_at else None
+            ),
+            'updated_at': (
+                self.updated_at.isoformat() if self.updated_at else None
+            )
         }
 
     def to_summary_dict(self):
-        """Convert the object to a summary dictionary for place listings"""
+        """Return a summarized dictionary representation of the place"""
         return {
-            "id": self.id,
-            "title": self.title,
-            "latitude": self.latitude,
-            "longitude": self.longitude
+            'id': self.id,
+            'title': self.title,
+            'latitude': self.latitude,
+            'longitude': self.longitude
         }
 
     def to_detail_dict(self):
-        """Convert the object to a detailed dictionary with relationships"""
+        """Return a detailed dictionary representation of the place
+        with relationships"""
         result = self.to_dict()
 
         # Add owner information if available
         if self.owner:
-            result["owner"] = {
-                "id": self.owner.id,
-                "first_name": self.owner.first_name,
-                "last_name": self.owner.last_name,
-                "email": self.owner.email
+            result['owner'] = {
+                'id': self.owner.id,
+                'first_name': self.owner.first_name,
+                'last_name': self.owner.last_name,
+                'email': self.owner.email
             }
 
         # Add amenities information
-        result["amenities"] = [
-            {"id": amenity.id, "name": amenity.name}
+        result['amenities'] = [
+            {'id': amenity.id, 'name': amenity.name}
             for amenity in self.amenities
         ]
 

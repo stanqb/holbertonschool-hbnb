@@ -1,68 +1,54 @@
+from app import db
+from sqlalchemy.orm import validates
 from .base_model import BaseModel
 
 
 class Review(BaseModel):
+    """Review model representing a user's review of a place"""
+    __tablename__ = 'reviews'
+
+    text = db.Column(db.Text, nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+
+    # Foreign keys
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey('users.id'),
+        nullable=False
+    )
+    place_id = db.Column(
+        db.String(36),
+        db.ForeignKey('places.id'),
+        nullable=False
+    )
+
+    # Relationships are defined in the User and Place models through backref
+
     def __init__(self, text, rating, place_id, user_id):
+        """Initialize a new review"""
         super().__init__()
-        self.text = self.validate_text(text)
-        self.rating = self.validate_rating(rating)
+        self.text = text
+        self.rating = rating
         self.place_id = place_id
         self.user_id = user_id
 
-    @staticmethod
-    def validate_text(text):
-        if not isinstance(text, str) or text.strip() == "":
-            raise ValueError("The text cannot be empty.")
+    @validates('text')
+    def validate_text(self, key, text):
+        """Validate the text of the review"""
+        if not text or text.strip() == "":
+            raise ValueError("Review text cannot be empty")
         return text
 
-    @staticmethod
-    def validate_rating(rating):
+    @validates('rating')
+    def validate_rating(self, key, rating):
+        """Validate the rating of the review"""
         try:
             rating = int(rating)
             if not (1 <= rating <= 5):
-                raise ValueError()
+                raise ValueError("Rating must be an integer between 1 and 5")
         except (ValueError, TypeError):
-            raise ValueError("The rating must be an integer between 1 and 5.")
+            raise ValueError("Rating must be an integer between 1 and 5")
         return rating
-
-    def validate(self, facade=None):
-        """Validate all review data and return a list of errors"""
-        errors = []
-
-        # Validate text
-        if not isinstance(self.text, str) or self.text.strip() == "":
-            errors.append("Review text cannot be empty")
-
-        # Validate rating
-        try:
-            rating = int(self.rating)
-            if not (1 <= rating <= 5):
-                errors.append("Rating must be an integer between 1 and 5")
-        except (ValueError, TypeError):
-            errors.append("Rating must be an integer between 1 and 5")
-
-        # Validate user_id and place_id
-        if not self.user_id:
-            errors.append("User ID cannot be empty")
-
-        if not self.place_id:
-            errors.append("Place ID cannot be empty")
-
-        # If a facade is provided, validate that IDs reference valid entities
-        if facade:
-            try:
-                if not facade.get_user_by_id(self.user_id):
-                    errors.append("Invalid user_id - user not found")
-            except Exception:
-                errors.append("Invalid user_id - user not found")
-
-            try:
-                if not facade.get_place_by_id(self.place_id):
-                    errors.append("Invalid place_id - place not found")
-            except Exception:
-                errors.append("Invalid place_id - place not found")
-
-        return errors
 
     def to_dict(self):
         """Return a dictionary representation of the review"""
@@ -72,10 +58,10 @@ class Review(BaseModel):
             'rating': self.rating,
             'user_id': self.user_id,
             'place_id': self.place_id,
-            'created_at': (self.created_at.isoformat()
-                           if hasattr(self.created_at, 'isoformat')
-                           else self.created_at),
-            'updated_at': (self.updated_at.isoformat()
-                           if hasattr(self.updated_at, 'isoformat')
-                           else self.updated_at)
+            'created_at': (
+                self.created_at.isoformat() if self.created_at else None
+            ),
+            'updated_at': (
+                self.updated_at.isoformat() if self.updated_at else None
+            )
         }
