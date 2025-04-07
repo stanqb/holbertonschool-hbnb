@@ -2,7 +2,7 @@ from flask import Flask
 from flask_restx import Api
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
-from flask_sqlalchemy import SQLAlchemy  # Add this line
+from flask_sqlalchemy import SQLAlchemy
 
 # Initialize Bcrypt
 bcrypt = Bcrypt()
@@ -24,6 +24,8 @@ def create_app(config_class="config.DevelopmentConfig"):
         Flask: The configured Flask application instance.
     """
     app = Flask(__name__)
+
+    # Configure the app from the config_class
     app.config.from_object(config_class)
 
     # Set JWT to use the same secret key as the app

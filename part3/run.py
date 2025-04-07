@@ -1,7 +1,22 @@
+import os
 from app import create_app
 from app.services.facade import HBnBFacade
 
-app = create_app()
+# Get the configuration from environment variable or use default
+flask_env = os.getenv('FLASK_ENV', 'development')
+
+# Create a mapping between environment names and config classes
+config_mapping = {
+    'development': 'config.DevelopmentConfig',
+    'testing': 'config.TestingConfig',
+    'production': 'config.ProductionConfig'
+}
+
+# Get the appropriate config class or default to DevelopmentConfig
+config_class = config_mapping.get(flask_env, 'config.DevelopmentConfig')
+
+# Create app with the selected config
+app = create_app(config_class)
 
 # Add a test user for development
 if __name__ == '__main__':
