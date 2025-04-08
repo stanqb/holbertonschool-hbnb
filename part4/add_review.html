@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBNB - Add Review</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" href="images/icon.png">
+</head>
+<body>
+    <header>
+        <img src="images/logo.png" alt="HBNB Logo" class="logo">
+        <a href="login.html" class="login-button">Login</a>
+    </header>
+    
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+    </nav>
+    
+    <main>
+        <section class="add-review">
+            <h2>Add a Review for <span id="place-name">Cozy Apartment in Paris</span></h2>
+            <form id="review-form" class="form">
+                <div class="form-group">
+                    <label for="review">Your Review:</label>
+                    <textarea id="review" name="review" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rating">Rating:</label>
+                    <select id="rating" name="rating" required>
+                        <option value="">Select Rating</option>
+                        <option value="1">1 - Poor</option>
+                        <option value="2">2 - Fair</option>
+                        <option value="3">3 - Good</option>
+                        <option value="4">4 - Very Good</option>
+                        <option value="5">5 - Excellent</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Submit Review</button>
+            </form>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2023 HBNB. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/add_review.js"></script>
+</body>
+</html>

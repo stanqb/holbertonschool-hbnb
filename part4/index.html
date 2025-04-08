@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBNB - List of Places</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" href="images/icon.png">
+</head>
+<body>
+    <header>
+        <img src="images/logo.png" alt="HBNB Logo" class="logo">
+        <a href="login.html" class="login-button" id="login-link">Login</a>
+    </header>
+    
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+    </nav>
+    
+    <main>
+        <section id="filter">
+            <h2>Filters</h2>
+            <label for="price-filter">Max Price:</label>
+            <select id="price-filter">
+                <option value="all">All</option>
+                <option value="10">$10</option>
+                <option value="50">$50</option>
+                <option value="100">$100</option>
+            </select>
+        </section>
+        
+        <section id="places-list">
+            <h2>Available Places</h2>
+            <!-- Exemple de carte (sera générée dynamiquement plus tard) -->
+            <div class="place-card">
+                <h3>Cozy Apartment</h3>
+                <p>$100 per night</p>
+                <a href="place.html?id=1" class="details-button">View Details</a>
+            </div>
+            
+            <div class="place-card">
+                <h3>Beach House</h3>
+                <p>$150 per night</p>
+                <a href="place.html?id=2" class="details-button">View Details</a>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2023 HBNB. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/index.js"></script>
+</body>
+</html>

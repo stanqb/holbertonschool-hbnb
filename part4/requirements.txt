@@ -1,0 +1,6 @@
+flask
+Flask-RESTX
+flask-jwt-extended
+flask-bcrypt
+sqlalchemy
+flask-sqlalchemy

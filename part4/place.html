@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBNB - Place Details</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="icon" href="images/icon.png">
+</head>
+<body>
+    <header>
+        <img src="images/logo.png" alt="HBNB Logo" class="logo">
+        <a href="login.html" class="login-button">Login</a>
+    </header>
+    
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+    </nav>
+    
+    <main>
+        <section id="place-details" class="place-details">
+            <!-- Exemple de contenu (sera généré dynamiquement plus tard) -->
+            <h2>Cozy Apartment in Paris</h2>
+            <div class="place-info">
+                <p><strong>Host:</strong> John Doe</p>
+                <p><strong>Price:</strong> $100 per night</p>
+                <p><strong>Description:</strong> A beautiful apartment in the heart of Paris, close to all attractions.</p>
+                <div class="amenities">
+                    <h3>Amenities</h3>
+                    <ul>
+                        <li>WiFi</li>
+                        <li>Air Conditioning</li>
+                        <li>Kitchen</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <section id="reviews">
+            <h3>Reviews</h3>
+            <div class="review-card">
+                <p>Fantastic place! Very clean and comfortable.</p>
+                <p>- Jane Smith</p>
+                <p>Rating: 5/5</p>
+            </div>
+            
+            <div class="review-card">
+                <p>Great location but a bit noisy at night.</p>
+                <p>- Mike Johnson</p>
+                <p>Rating: 4/5</p>
+            </div>
+        </section>
+        
+        <section id="add-review-button">
+            <h3>Add Your Review</h3>
+            <a href="add_review.html?id=1" class="details-button">Add Review</a>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2023 HBNB. All rights reserved.</p>
+    </footer>
+
+    <script src="scripts/place.js"></script>
+</body>
+</html>
