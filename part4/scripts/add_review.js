@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
             
-            const response = await fetch(`/api/v1/places/${placeId}`, {
+            const response = await fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
                 method: 'GET',
                 headers: headers
             });
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to submit the review to the API
     async function submitReview(token, placeId, reviewText, rating) {
         try {
-            const response = await fetch('/api/v1/reviews/', {
+            const response = await fetch('http://127.0.0.1:5000/api/v1/reviews/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
